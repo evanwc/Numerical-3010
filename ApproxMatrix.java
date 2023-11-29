@@ -19,6 +19,7 @@ public class ApproxMatrix {
         String type = in.nextLine();
         System.out.println("How many rows/columns in matrix: ");
         int size = in.nextInt();
+        in.nextLine();
     
         double[][] matrix = new double[size][size + 1];
     
@@ -36,31 +37,25 @@ public class ApproxMatrix {
         else if (ans.equals("f")) {
             System.out.println("Please type the file name and extension: ");
             String fileName = in.nextLine();
-            File file = new File("Matrix.txt" + fileName);
-            System.out.println(file.exists());
-            System.out.println(file.isDirectory());
-            System.out.println(file.canRead());
-            System.out.println("Current Directory = " + System.getProperty("user.dir"));
-            //System.out.println(file.getCanonicalPath());
+            File file = new File(fileName);
+            try {
+                Scanner fileReader = new Scanner(file);
+                for (int i = 0; i < size; i++) {
+                    int j = 0;
+                    while (j < (size + 1) && fileReader.hasNext()) {
+                        if (fileReader.hasNextInt()) matrix[i][j] = (double) fileReader.nextInt();
+                        else in.next();
+                        j++;
+                    }
+                }
+                fileReader.close();
+            }
+            catch (FileNotFoundException ff) {
+                System.out.println("Exception " + ff.toString());
+            }
         }
-        //     try {
-        //         Scanner fileReader    = new Scanner(file);
-        //         for (int i = 0; i < size; i++) {
-        //             int j = 0;
-        //             while (j < (size + 1) && fileReader.hasNext()) {
-        //                 if (fileReader.hasNextInt()) matrix[i][j] = (double)in.nextInt();
-        //                 else in.next();
-        //                 j++;
-        //             }
-        //         }
-        //         fileReader.close();
-        //     }
-        //     catch (FileNotFoundException ff) {
-        //         System.out.println("Exception " + ff.toString());
-        //     }
-        // }
-
-        if (type.equals("j")) Jacobi(matrix);
+        
+        if (type.equals("j")) Jacobi(matrix, in);
         else Gauss(matrix, in);
         
     }
@@ -84,12 +79,18 @@ public class ApproxMatrix {
         else System.out.println("Matrix is diagonally dominant");
     }
 
-    public static void Jacobi(double[][] matrix) {
+    public static void Jacobi(double[][] matrix, Scanner in) {
+        in.nextLine();
+        System.out.println("What is the desired error: ");
+        double goal = Double.parseDouble(in.nextLine());
+
+        double error = Double.MAX_VALUE;
+
         double[] iter = new double[matrix.length];
         double[] prev = new double[matrix.length];
         int size = matrix.length;    
 
-        for (int index = 0; index < size; index++) {
+        for (int index = 0; error > goal && index < 50; index++) {
             System.out.print("x superscript " + (index + 1) + " = [");
             for (int i = 0; i < size; i++) {
                 prev[i] = iter[i];
@@ -104,10 +105,19 @@ public class ApproxMatrix {
                 else System.out.print(dformat.format(iter[i]));
             }
             System.out.println("]");
+             double numer = 0d;
+            double denom = 0d;
+            for (int i = 0; i < iter.length; i++) {
+                numer += (iter[i] - prev[i]) * (iter[i] - prev[i]);
+                denom += iter[i] * iter[i];
+            }
+            error = Math.sqrt(numer) / Math.sqrt(denom);
+            System.out.println("     error:  " + error);
         }
     }
 
     public static void Gauss(double[][] matrix, Scanner in) {
+        in.nextLine();
         System.out.println("What is the desired error: ");
         double goal = Double.parseDouble(in.nextLine());
 
@@ -142,6 +152,5 @@ public class ApproxMatrix {
             error = Math.sqrt(numer) / Math.sqrt(denom);
             System.out.println("     error:  " + error);
         }
-
     }
 }
