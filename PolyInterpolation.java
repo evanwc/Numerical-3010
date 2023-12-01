@@ -54,12 +54,15 @@ public class PolyInterpolation {
         final DecimalFormat df = new DecimalFormat("+##.###;-##.###");
         final DecimalFormat df2 = new DecimalFormat("##.###");
 
+
+        //divided differences: display x
         System.out.print("x\t\t");
         for (int i = 0; i < size; i++) {
             System.out.print(df.format(xval[i]) + "\t\t");
         }
         System.out.println();
 
+        //divided differences: display f[]
         System.out.print("f[]\t\t");
         for (int i = 0; i < size; i++) {
             temp[0][i] = fxval[i];
@@ -67,6 +70,7 @@ public class PolyInterpolation {
         }
         System.out.println();
 
+        //divided differences: calculate and display each iteration starting from f[,]
         for (int i = 0; i < size - 1; i++) {
             System.out.print("f[");
             for (int k = -1; k < i; k++) {
@@ -77,9 +81,11 @@ public class PolyInterpolation {
                 temp[i + 1][j] = (temp[i][j + 1] - temp[i][j]) / (xval[j + i + 1] - xval[j]);
                 System.out.print(df.format(temp[i + 1][j]) + "\t\t");
             }
-            System.out.println();
-        }
-        
+            System.out.println("\n");
+        }        
+
+
+        //display in Newton form
         String Newton = "";
         for (int i = 0; i < size; i++) {
             Newton += df2.format(temp[i][0]);
@@ -88,7 +94,57 @@ public class PolyInterpolation {
             }
             if (i != size - 1) Newton += " + ";
         }
-        System.out.println(Newton);
+        System.out.println("Newton Form: " + Newton + "\n");
+
+
+        //calculate and display Lagrange form
+        String Lagrange = "";
+        for (int i = 0; i < size; i++) {
+            double coeff = fxval[i];
+            String expression = "";
+            for (int j = 0; j < size; j++)
+            {
+                if (j != i) {
+                    expression += "(x - " + df2.format(xval[j]) + ")";
+                    coeff /= xval[i] - xval[j];
+                }
+            }
+            Lagrange += df2.format(coeff) + expression;
+            if (i != size - 1) Lagrange += " + ";
+        }
+        System.out.println("Lagrange Form: " + Lagrange + "\n");
+
+
+        //using matrix with Newton coefficients to calculate simplified polynomial
+        double[][] polyCo = new double[size][size];
+
+        //calculated coefficients from multiplying polynomials with roots
+        for (int i = 0; i < size; i++) {
+            double addval = 0d;
+            double multval = 1d;
+            //intermediate values tracking xval sum/product
+            for (int j = i; j < size; j++) {
+                if (i == j) polyCo[i][j] = 1 * temp[i][0]; //if it is on diagonal, it is the largest degree of that term and will have coeff of 1
+                else {
+                    if (j == i + 1) polyCo[i][j] = addval * temp[j][0];
+                    else polyCo[i][j] = multval * temp[j][0];
+                }
+                addval -= xval[j];
+                multval *= -1 * xval[j];
+                System.out.print(polyCo[i][j] + " ");
+            }
+        }
+
+        //display standard form polynomial
+        System.out.print("Standard Form: ");
+        for (int i = size - 1; i > 0; i--) {
+            double out = 0d;
+            for (int j = size - 1; j > 0; j--) {
+                out += polyCo[i][j];
+            }
+            System.out.print(df2.format(out) + "x^" + i + " + ");
+        } 
+        System.out.println(polyCo[0][0]); //last term will always be first Newton coefficient
 
     }
 
