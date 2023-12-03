@@ -82,13 +82,14 @@ public class PolyInterpolation {
                 System.out.print(df.format(temp[i + 1][j]) + "\t\t");
             }
             System.out.println("\n");
-        }        
-
-
+        }
+        
+        double[] newtonCo = new double[size];
         //display in Newton form
         String Newton = "";
         for (int i = 0; i < size; i++) {
             Newton += df2.format(temp[i][0]);
+            newtonCo[i] = temp[i][0];
             for (int j = 0; j < i; j++) {
                 Newton += "(x - " + xval[j] + ")";
             }
@@ -114,38 +115,38 @@ public class PolyInterpolation {
         }
         System.out.println("Lagrange Form: " + Lagrange + "\n");
 
-
         //using matrix with Newton coefficients to calculate simplified polynomial
         double[][] polyCo = new double[size][size];
 
-        //calculated coefficients from multiplying polynomials with roots
+        //calculated coefficients from roots only
         for (int i = 0; i < size; i++) {
-            double addval = 0d;
-            double multval = 1d;
             //intermediate values tracking xval sum/product
-            for (int j = i; j < size; j++) {
-                if (i == j) polyCo[i][j] = 1 * temp[i][0]; //if it is on diagonal, it is the largest degree of that term and will have coeff of 1
-                else {
-                    if (j == i + 1) polyCo[i][j] = addval * temp[j][0];
-                    else polyCo[i][j] = multval * temp[j][0];
+            for (int j = 0; j <= i; j++) {
+                if (i == j) polyCo[i][j] = 1; //if it is on diagonal, it is the largest degree of that term and will have coeff of 1
+                else if (j < i) {
+                    if (j > 0 && polyCo[i - 1][j - 1] == 0) polyCo[i][j] = polyCo[i - 1][j] * xval[i - 1] * -1;
+                    else if (j > 0 && polyCo[i - 1][j] != 0) polyCo[i][j] = polyCo[i - 1][j - 1] - xval[i - 1];
+                    else if (j > 0 && polyCo[i - 1][j] == 0) polyCo[i][j] = polyCo[i - 1][j - 1];
+                    else polyCo[i][j] = polyCo[i - 1][j] * xval[i - 1];
                 }
-                addval -= xval[j];
-                multval *= -1 * xval[j];
-                System.out.print(polyCo[i][j] + " ");
+            }
+        }
+        //multiply each row by respective newton coefficients
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                polyCo[i][j] *= newtonCo[i];
             }
         }
 
         //display standard form polynomial
         System.out.print("Standard Form: ");
-        for (int i = size - 1; i > 0; i--) {
+        for (int i = size - 1; i >= 0; i--) {
             double out = 0d;
-            for (int j = size - 1; j > 0; j--) {
-                out += polyCo[i][j];
+            for (int j = size - 1; j >= 0; j--) {
+                out += polyCo[j][i];
             }
-            System.out.print(df2.format(out) + "x^" + i + " + ");
-        } 
-        System.out.println(polyCo[0][0]); //last term will always be first Newton coefficient
-
+            if (i > 0) System.out.print(df2.format(out) + "x^" + i + " + ");
+            else System.out.print(df2.format(out));
+        }
     }
-
 }
